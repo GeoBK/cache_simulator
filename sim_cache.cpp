@@ -192,33 +192,33 @@ class Cache {
                 invalid_tag_block_found=true;
             }
         }
-        if(cache_level==1){
-            printf("------------------------------------------------\n");
-            if(mode=='r'){
-                printf("# %d: read %0x\n",line,address);
-                printf("L1 read: %0x (tag %0x, index %d)\n", address, c3, c1);
-            }else if (mode=='w'){
-                printf("# %d: write %0x\n",line,address);
-                printf("L1 write: %0x (tag %0x, index %d)\n", address, c3, c1);
-            }            
-            if(is_found){
-                printf("L1 hit \n");
-            }else{
-                printf("L1 miss \n");
-            } 
-        }else if(cache_level==2){
-            if(mode=='r'){
-                printf("L2 read: %0x (C0 %0x, C1 %0x, C2 %0x, C3 %0x) \n",address,c0,c1,c2,c3);
-            }else if(mode == 'w'){
-                printf("L2 write:  (C0 %0x, C1 %0x, C2 %0x, C3 %0x) \n",c0,c1,c2,c3);
-            }
+        // if(cache_level==1){
+        //     printf("------------------------------------------------\n");
+        //     if(mode=='r'){
+        //         printf("# %d: read %0x\n",line,address);
+        //         printf("L1 read: %0x (tag %0x, index %d)\n", address, c3, c1);
+        //     }else if (mode=='w'){
+        //         printf("# %d: write %0x\n",line,address);
+        //         printf("L1 write: %0x (tag %0x, index %d)\n", address, c3, c1);
+        //     }            
+        //     if(is_found){
+        //         printf("L1 hit \n");
+        //     }else{
+        //         printf("L1 miss \n");
+        //     } 
+        // }else if(cache_level==2){
+        //     if(mode=='r'){
+        //         printf("L2 read: %0x (C0 %0x, C1 %0x, C2 %0x, C3 %0x) \n",address,c0,c1,c2,c3);
+        //     }else if(mode == 'w'){
+        //         printf("L2 write:  (C0 %0x, C1 %0x, C2 %0x, C3 %0x) \n",c0,c1,c2,c3);
+        //     }
             
-            if(is_found){
-                printf("L2 hit \n");
-            }else{
-                printf("L2 miss \n");
-            } 
-        }
+        //     if(is_found){
+        //         printf("L2 hit \n");
+        //     }else{
+        //         printf("L2 miss \n");
+        //     } 
+        // }
         if(!is_block_found){
             cache_block_miss++;
         }
@@ -246,12 +246,12 @@ class Cache {
                 next_level->ReadFromAddress(address);
             }            
         }
-        if(cache_level==1){
-            printf("L1 update LRU\n");
-        }else
-        {
-            printf("L2 update LRU\n");
-        }        
+        // if(cache_level==1){
+        //     printf("L1 update LRU\n");
+        // }else
+        // {
+        //     printf("L2 update LRU\n");
+        // }        
     }
 
 
@@ -263,6 +263,15 @@ class Cache {
     bool WriteToAddress(unsigned int address){        
         FetchBlock(address,'w');              
         return true;
+    }
+
+    float GetMissRate(){
+        return ((float)num_read_miss+(float)num_write_miss)/((float)num_reads+(float)num_writes);
+
+    }
+
+    int GetCacheBlockMiss(){
+        return num_read_miss + num_write_miss - sector_miss;
     }
     
     void PrintDataCacheContent(){               
@@ -333,6 +342,17 @@ class Cache {
 
     }
 
+    void DisplayStats(){
+        cout<<"===== Simulation Results =====\n";
+        cout<<"a. number of L1 reads:			"<<num_reads<<"\n";
+        cout<<"b. number of L1 read misses:		"<<num_read_miss<<"\n";
+        cout<<"c. number of L1 writes:			"<<num_writes<<"\n";
+        cout<<"d. number of L1 write misses:		"<<num_write_miss<<"\n";
+        cout<<"e. L1 miss rate:			"<<((float)num_read_miss+(float)num_write_miss)/((float)num_reads+(float)num_writes)<<"\n";
+        cout<<"f. number of writebacks from L1 memory:	"<<num_write_backs<<"\n";
+        cout<<"g. total memory traffic:		"<<num_memory_access<<"\n";
+    }
+
 };
 
 void DisplayStats(Cache l1, Cache l2){ 
@@ -387,58 +407,99 @@ int main(int argc, char* _argv[])
         return SYSERR;
     }
     string str;
-    Cache L1_cache = Cache(block_size,l1_size,l1_assoc,1,1,1);
-    Cache L2_cache = Cache(block_size,l2_size,l2_assoc,l2_data_blocks,l2_addr_tags,2);
-    L1_cache.AttachNextLevelCache(&L2_cache);
-    printf("  ===== Simulator configuration =====\n");
-    printf("  BLOCKSIZE:                        %d\n",block_size);
-    printf("  L1_SIZE:                          %d\n",l1_size);
-    printf("  L1_ASSOC:                         %d\n",l1_assoc);
-    printf("  L2_SIZE:                          %d\n",l2_size);
-    printf("  L2_ASSOC:                         %d\n",l2_assoc);
-    printf("  L2_DATA_BLOCKS:                   %d\n",l2_data_blocks);
-    printf("  L2_ADDRESS_TAGS:                  %d\n",l2_addr_tags);
-    printf("  trace_file:                       %s\n",trace_file);
-    while(!infile.eof()){
-        line++;
-        getline(infile,str);     
-        if(str!=""){
+    // printf("  ===== Simulator configuration =====\n");
+    // printf("  BLOCKSIZE:                        %d\n",block_size);
+    // printf("  L1_SIZE:                          %d\n",l1_size);
+    // printf("  L1_ASSOC:                         %d\n",l1_assoc);
+    // printf("  L2_SIZE:                          %d\n",l2_size);
+    // printf("  L2_ASSOC:                         %d\n",l2_assoc);
+    // printf("  L2_DATA_BLOCKS:                   %d\n",l2_data_blocks);
+    // printf("  L2_ADDRESS_TAGS:                  %d\n",l2_addr_tags);
+    // printf("  trace_file:                       %s\n",trace_file);
+    if(l2_data_blocks==0 && l2_addr_tags==0){
+        Cache cache = Cache(block_size,l1_size,l1_assoc,1,1,1);
+        while(!infile.eof()){
+            getline(infile,str);        
             char first_char=str[0];
             if(first_char=='r'){
                 str[0]='0';
                 str[1]='X';
-                unsigned int addr = stoul(str,nullptr,16);
-                L1_cache.ReadFromAddress(addr);
+                unsigned int addr = stoi(str);
+                cache.ReadFromAddress(addr);
             }else if(first_char=='w'){
                 str[0]='0';
                 str[1]='X';
-                unsigned int addr = stoul(str,nullptr,16);
-                L1_cache.WriteToAddress(addr);
+                unsigned int addr = stoi(str);
+                cache.WriteToAddress(addr);
             }else{
                 cout<<"Unexpected value in trace file!!! \n";
             }
-        }        
-    }
-    infile.close();
+        }
+        infile.close();
+        cache.DisplayStats();
 
-    cout<< "\n===== L1 contents =====\n ";
-    L1_cache.PrintCacheContent();
-    cout<<"\n";
-    
-    if(l2_data_blocks==1 && l2_addr_tags==1){
-        cout<<"===== L2 contents =====\n";
-        cout<<"";
-        L2_cache.PrintCacheContent();
-        cout<<"\n";
-         
-    }else{        
-        cout<<"===== L2 Address Array contents =====\n";
-        L2_cache.PrintAddressCacheContent();
-        cout<<"\n===== L2 Data Array contents =====\n";
-        L2_cache.PrintDataCacheContent();
+    }else{
+        Cache L1_cache = Cache(block_size,l1_size,l1_assoc,1,1,1);
+        Cache L2_cache = Cache(block_size,l2_size,l2_assoc,l2_data_blocks,l2_addr_tags,2);
+        L1_cache.AttachNextLevelCache(&L2_cache);
+        
+        while(!infile.eof()){
+            line++;
+            getline(infile,str);     
+            if(str!=""){
+                char first_char=str[0];
+                if(first_char=='r'){
+                    str[0]='0';
+                    str[1]='X';
+                    unsigned int addr = stoul(str,nullptr,16);
+                    L1_cache.ReadFromAddress(addr);
+                }else if(first_char=='w'){
+                    str[0]='0';
+                    str[1]='X';
+                    unsigned int addr = stoul(str,nullptr,16);
+                    L1_cache.WriteToAddress(addr);
+                }else{
+                    cout<<"Unexpected value in trace file!!! \n";
+                }
+            }        
+        }
+        infile.close();
+
+        // cout<< "\n===== L1 contents =====\n ";
+        // L1_cache.PrintCacheContent();
+        // cout<<"\n";
+        
+        // if(l2_data_blocks==1 && l2_addr_tags==1){
+        //     cout<<"===== L2 contents =====\n";
+        //     cout<<"";
+        //     L2_cache.PrintCacheContent();
+        //     cout<<"\n";
+            
+        // }else{        
+        //     cout<<"===== L2 Address Array contents =====\n";
+        //     L2_cache.PrintAddressCacheContent();
+        //     cout<<"\n===== L2 Data Array contents =====\n";
+        //     L2_cache.PrintDataCacheContent();
+
+        // }
+        // DisplayStats(L1_cache,L2_cache);  
+
+        //Calculation for average access time
+        float ht_l1 = 0.25 + (2.5 * ((float)l1_size / (float)524288)) + (0.025 * ((float)block_size / (float)16)) + (0.025 * (float)l1_assoc);
+        float ht_l2 = 2.5 + (2.5 * ((float)l2_size / (float)524288)) + (0.025 * ((float)block_size / (float)16))+ (0.025 * (float)l2_assoc);
+        float mp_l2 = (float)20 + (0.5*(block_size/16));
+        float aat_l1 = ht_l1 + (L1_cache.GetMissRate()*(ht_l2 + (L2_cache.GetMissRate()*mp_l2)));
+
+        // printf("BlockSize\tL1Size\tL1Associativity\tL2Size\tL2Associativity\tDataBlocks\tAddressTags\tL1Reads\tL1ReadMiss\tL1Writes\tL1WriteMiss\tL1MissRate\tL2Reads\tL2ReadMiss\tL2Writes\tL2WriteMiss\tL2SectorMiss\tL2CacheBlockMiss\tL2MissRate\tL2Writebacks\tMemoryAccess\tAAT\n");
+        // printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%0.4f\n",
+        // block_size,l1_size,l1_assoc,l2_size,l2_assoc,l2_data_blocks,l2_addr_tags,
+        // L1_cache.num_reads,L1_cache.num_read_miss,L1_cache.num_writes,L1_cache.num_write_miss,L1_cache.GetMissRate(),
+        // L2_cache.num_reads,L2_cache.num_read_miss,L2_cache.num_writes,L2_cache.num_write_miss,L2_cache.sector_miss,L2_cache.GetCacheBlockMiss(),L2_cache.GetMissRate(),L2_cache.num_write_backs,L2_cache.num_memory_access
+        // ,aat_l1);
+
+        printf("%0.4f\n",aat_l1);
 
     }
-    DisplayStats(L1_cache,L2_cache);  
     
     
     return 0;
