@@ -348,7 +348,7 @@ class Cache {
         cout<<"b. number of L1 read misses:		"<<num_read_miss<<"\n";
         cout<<"c. number of L1 writes:			"<<num_writes<<"\n";
         cout<<"d. number of L1 write misses:		"<<num_write_miss<<"\n";
-        cout<<"e. L1 miss rate:			"<<((float)num_read_miss+(float)num_write_miss)/((float)num_reads+(float)num_writes)<<"\n";
+        printf("e. L1 miss rate:			%0.4f\n",((float)num_read_miss+(float)num_write_miss)/((float)num_reads+(float)num_writes));        
         cout<<"f. number of writebacks from L1 memory:	"<<num_write_backs<<"\n";
         cout<<"g. total memory traffic:		"<<num_memory_access<<"\n";
     }
@@ -407,35 +407,44 @@ int main(int argc, char* _argv[])
         return SYSERR;
     }
     string str;
-    // printf("  ===== Simulator configuration =====\n");
-    // printf("  BLOCKSIZE:                        %d\n",block_size);
-    // printf("  L1_SIZE:                          %d\n",l1_size);
-    // printf("  L1_ASSOC:                         %d\n",l1_assoc);
-    // printf("  L2_SIZE:                          %d\n",l2_size);
-    // printf("  L2_ASSOC:                         %d\n",l2_assoc);
-    // printf("  L2_DATA_BLOCKS:                   %d\n",l2_data_blocks);
-    // printf("  L2_ADDRESS_TAGS:                  %d\n",l2_addr_tags);
-    // printf("  trace_file:                       %s\n",trace_file);
+    printf("  ===== Simulator configuration =====\n");
+    printf("  BLOCKSIZE:                        %d\n",block_size);
+    printf("  L1_SIZE:                          %d\n",l1_size);
+    printf("  L1_ASSOC:                         %d\n",l1_assoc);
+    printf("  L2_SIZE:                          %d\n",l2_size);
+    printf("  L2_ASSOC:                         %d\n",l2_assoc);
+    printf("  L2_DATA_BLOCKS:                   %d\n",l2_data_blocks);
+    printf("  L2_ADDRESS_TAGS:                  %d\n",l2_addr_tags);
+    printf("  trace_file:                       %s\n",trace_file);
     if(l2_data_blocks==0 && l2_addr_tags==0){
         Cache cache = Cache(block_size,l1_size,l1_assoc,1,1,1);
         while(!infile.eof()){
-            getline(infile,str);        
+        line++;
+        getline(infile,str);
+        if(str!=""){
             char first_char=str[0];
             if(first_char=='r'){
                 str[0]='0';
                 str[1]='X';
-                unsigned int addr = stoi(str);
+                unsigned int addr = stoul(str,nullptr,16);
                 cache.ReadFromAddress(addr);
             }else if(first_char=='w'){
                 str[0]='0';
                 str[1]='X';
-                unsigned int addr = stoi(str);
+                unsigned int addr = stoul(str,nullptr,16);
                 cache.WriteToAddress(addr);
             }else{
                 cout<<"Unexpected value in trace file!!! \n";
+                }
             }
         }
+
+        
         infile.close();
+        cout<<"\n";
+        cout<<"===== L1 contents =====\n";
+        cache.PrintCacheContent();
+        cout<<"\n";
         cache.DisplayStats();
 
     }else{
@@ -465,24 +474,24 @@ int main(int argc, char* _argv[])
         }
         infile.close();
 
-        // cout<< "\n===== L1 contents =====\n ";
-        // L1_cache.PrintCacheContent();
-        // cout<<"\n";
+        cout<< "\n===== L1 contents =====\n ";
+        L1_cache.PrintCacheContent();
+        cout<<"\n";
         
-        // if(l2_data_blocks==1 && l2_addr_tags==1){
-        //     cout<<"===== L2 contents =====\n";
-        //     cout<<"";
-        //     L2_cache.PrintCacheContent();
-        //     cout<<"\n";
+        if(l2_data_blocks==1 && l2_addr_tags==1){
+            cout<<"===== L2 contents =====\n";
+            cout<<"";
+            L2_cache.PrintCacheContent();
+            cout<<"\n";
             
-        // }else{        
-        //     cout<<"===== L2 Address Array contents =====\n";
-        //     L2_cache.PrintAddressCacheContent();
-        //     cout<<"\n===== L2 Data Array contents =====\n";
-        //     L2_cache.PrintDataCacheContent();
+        }else{        
+            cout<<"===== L2 Address Array contents =====\n";
+            L2_cache.PrintAddressCacheContent();
+            cout<<"\n===== L2 Data Array contents =====\n";
+            L2_cache.PrintDataCacheContent();
 
-        // }
-        // DisplayStats(L1_cache,L2_cache);  
+        }
+        DisplayStats(L1_cache,L2_cache);  
 
         //Calculation for average access time
         float ht_l1 = 0.25 + (2.5 * ((float)l1_size / (float)524288)) + (0.025 * ((float)block_size / (float)16)) + (0.025 * (float)l1_assoc);
@@ -490,14 +499,16 @@ int main(int argc, char* _argv[])
         float mp_l2 = (float)20 + (0.5*(block_size/16));
         float aat_l1 = ht_l1 + (L1_cache.GetMissRate()*(ht_l2 + (L2_cache.GetMissRate()*mp_l2)));
 
-        // printf("BlockSize\tL1Size\tL1Associativity\tL2Size\tL2Associativity\tDataBlocks\tAddressTags\tL1Reads\tL1ReadMiss\tL1Writes\tL1WriteMiss\tL1MissRate\tL2Reads\tL2ReadMiss\tL2Writes\tL2WriteMiss\tL2SectorMiss\tL2CacheBlockMiss\tL2MissRate\tL2Writebacks\tMemoryAccess\tAAT\n");
-        // printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%0.4f\n",
-        // block_size,l1_size,l1_assoc,l2_size,l2_assoc,l2_data_blocks,l2_addr_tags,
-        // L1_cache.num_reads,L1_cache.num_read_miss,L1_cache.num_writes,L1_cache.num_write_miss,L1_cache.GetMissRate(),
-        // L2_cache.num_reads,L2_cache.num_read_miss,L2_cache.num_writes,L2_cache.num_write_miss,L2_cache.sector_miss,L2_cache.GetCacheBlockMiss(),L2_cache.GetMissRate(),L2_cache.num_write_backs,L2_cache.num_memory_access
-        // ,aat_l1);
+        printf("BlockSize\tL1Size\tL1Associativity\tL2Size\tL2Associativity\tDataBlocks\tAddressTags\tL1Reads\tL1ReadMiss\tL1Writes\tL1WriteMiss\tL1MissRate\tL2Reads\tL2ReadMiss\tL2Writes\tL2WriteMiss\tL2SectorMiss\tL2CacheBlockMiss\tL2MissRate\tL2Writebacks\tMemoryAccess\tAAT\n");
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%d\t%d\t%d\t%d\t%0.4f\t%d\t%d\t%0.4f\n",
+        block_size,l1_size,l1_assoc,l2_size,l2_assoc,l2_data_blocks,l2_addr_tags,
+        L1_cache.num_reads,L1_cache.num_read_miss,L1_cache.num_writes,L1_cache.num_write_miss,L1_cache.GetMissRate(),
+        L2_cache.num_reads,L2_cache.num_read_miss,L2_cache.num_writes,L2_cache.num_write_miss,L2_cache.sector_miss,L2_cache.GetCacheBlockMiss(),L2_cache.GetMissRate(),L2_cache.num_write_backs,L2_cache.num_memory_access
+        ,aat_l1);
 
-        printf("%0.4f\n",aat_l1);
+        cout<<"\nHTL1 "<<hex<<ht_l1<< " HTL2 "<<ht_l2<< " MP L2 "<<mp_l2;
+
+        // printf("%0.4f\n",aat_l1);
 
     }
     
