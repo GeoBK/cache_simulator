@@ -1,8 +1,9 @@
 CC = g++
+C11 = -std=c++11
 OPT = -O3
 OPT_DEBUG = -g
 WARN = -Wall
-CFLAGS = $(OPT) $(WARN) $(INC) $(LIB)
+CFLAGS = $(C11) $(OPT) $(WARN) $(INC) $(LIB)
 
 
 # List all your .cc/.cpp files here (source files, excluding header files)
@@ -18,7 +19,7 @@ SIM_OBJ = sim_cache.o
 all: sim_cache
 	@echo "my work is done here..."
 
-debug: CFLAGS = $(OPT_DEBUG) $(WARN) $(INC) $(LIB)
+debug: CFLAGS = $(C11) $(OPT_DEBUG) $(WARN) $(INC) $(LIB)
 debug: sim_cache
 	@echo "In debug $(CFLAGS)"
 
