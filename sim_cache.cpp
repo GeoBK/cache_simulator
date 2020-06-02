@@ -18,6 +18,7 @@ class Block {
 };
 
 class Set{
+
     public:
     Set(int associativity){
         for(int i=0;i<associativity;i++){
